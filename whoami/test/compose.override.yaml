@@ -1,0 +1,17 @@
+version: "3"
+
+networks:
+  traefik:
+    external: true
+
+services:
+  whoami:
+    container_name: whoami-test
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.service=whoami-test"
+      - "traefik.http.services.whoami-test.loadbalancer.server.port=80"
+      - "traefik.http.routers.whoami.entrypoints=http"
