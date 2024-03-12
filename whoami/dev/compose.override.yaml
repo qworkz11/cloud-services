@@ -1,0 +1,7 @@
+version: "3"
+
+services:
+  whoami:
+    container_name: whoami-dev
+    ports:
+      - 8888:80
