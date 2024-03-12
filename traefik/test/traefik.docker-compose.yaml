@@ -1,0 +1,27 @@
+version: "3.8"
+
+networks:
+  traefik:
+    name: traefik
+    external: false
+
+services:
+  traefik:
+    image: traefik:v3.0
+    restart: unless-stopped
+    container_name: traefik
+    networks:
+      - traefik
+    command: 
+      - --log.level=DEBUG
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "traefik.enable=true"
