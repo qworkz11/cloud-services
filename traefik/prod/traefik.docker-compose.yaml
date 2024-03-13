@@ -1,0 +1,4 @@
+version: "3"
+
+include:
+  - ../test/traefik.docker-compose.yaml
