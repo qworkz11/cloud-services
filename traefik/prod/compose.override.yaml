@@ -7,8 +7,8 @@ services:
     command:
       - --log.level=$TRAEFIK_LOG_LEVEL
       # - --api.insecure=true
-      - --api
-      - --accesslog=$TRAEFIK_ACCESS_LOG
+      - --api.dashboard=true
+      - --accesslog=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
@@ -16,8 +16,8 @@ services:
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
-      # - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
-      # - --entrypoints.websecure.http.tls.certresolver=letsencrypt
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
+      - --entrypoints.websecure.http.tls.certresolver=letsencrypt
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=duckdns
       - --certificatesresolvers.letsencrypt.acme.email=$EMAIL
@@ -30,12 +30,7 @@ services:
       - DUCKDNS_TOKEN=$DUCKDNS_TOKEN
     labels:
       - traefik.enable=true
-      - traefik.http.routers.dashboard.rule=Host(`$DOMAIN`)
-      - traefik.http.routers.dashboard.service=api@internal
-      - traefik.http.routers.dashboard.tls=true
-      - traefik.http.routers.dashboard.middlewares=dashboard-auth
-      - traefik.http.middlewares.dashboard-auth.basicauth.users=$DASHBOARD_USER:$DASHBOARD_USER_PASSWORD_HASH
-      # TODO only for debugging, dashboard should not be reachable from the outside
-      # - traefik.http.routers.dashboard.rule=Host(`${SUBDOMAIN_DASHBOARD}.${DOMAIN}`)
-      # - traefik.backend=dashboard
-      # - traefik.frontend.rule=Host:${SUBDOMAIN_DASHBOARD}.${DOMAIN}
+      - traefik.http.routers.traefik-api.rule=Host(`$SUBDOMAIN_DASHBOARD.$DOMAIN`)
+      - traefik.http.routers.traefik-api.service=api@internal
+      - traefik.http.routers.traefik-api.middlewares=api-auth
+      - traefik.http.middlewares.api-auth.basicAuth.users=$DASHBOARD_USER:$DASHBOARD_USER_PASSWORD_HASH

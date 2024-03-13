@@ -15,6 +15,7 @@ services:
     command: 
       - --log.level=DEBUG
       - --api.insecure=true
+      - --accesslog=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
