@@ -1,4 +1,4 @@
-# Homecloud
+# Cloud Services
 
 Multiple docker-based services behind a Traefik reverse proxy.
 
