@@ -22,6 +22,6 @@ services:
       - ./letsencrypt:/letsencrypt
     labels:
       # TODO only for debugging, dashboard should not be reachable from the outside
-      - traefik.http.routers.dashboard.rule=Host(`$DASHBOARD_HOST`)
+      - traefik.http.routers.dashboard.rule=Host(`$SUBDOMAIN_DASHBOARD.$DOMAIN`)
       - traefik.http.routers.dashboard.service=dashboard
       - traefik.http.services.traefik.loadbalancer.server.port=8080
