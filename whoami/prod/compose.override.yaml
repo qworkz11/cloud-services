@@ -1,0 +1,16 @@
+version: "3"
+
+networks:
+  traefik:
+    external: true
+
+services:
+  whoami:
+    container_name: whoami-test
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami.rule=Host(`$SUBDOMAIN_WHOAMI.$DOMAIN`)
+      - traefik.http.routers.whoami.service=whoami
+      - traefik.http.services.whoami-test.loadbalancer.server.port=80
