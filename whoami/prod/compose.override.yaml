@@ -11,6 +11,7 @@ services:
       - traefik
     labels:
       - traefik.enable=true
+      - traefik.http.routers.whoami.tls=true
       - traefik.http.routers.whoami.rule=Host(`$SUBDOMAIN_WHOAMI.$DOMAIN`)
       - traefik.http.routers.whoami.service=whoami
       - traefik.http.services.whoami-test.loadbalancer.server.port=80
