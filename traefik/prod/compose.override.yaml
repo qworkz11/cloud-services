@@ -7,7 +7,7 @@ services:
     command:
       - --log.level=$TRAEFIK_LOG_LEVEL
       - --api.insecure=false
-      - --entrypoints.web.redirections.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
       - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
