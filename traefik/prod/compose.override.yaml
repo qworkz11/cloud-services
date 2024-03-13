@@ -12,12 +12,12 @@ services:
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
       - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
       - --entrypoints.websecure.http.tls.certresolver=letsencrypt
-      - --certificateresolvers.letsencrypt.acme.dnschallenge=true
-      - --certificateresolvers.letsencrypt.acme.dnschallenge.provider=duckdns
-      - --certificateresolvers.letsencrypt.acme.email=$EMAIL
-      - --certificateresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=duckdns
+      - --certificatesresolvers.letsencrypt.acme.email=$EMAIL
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       # only for debugging:
-      - --certificateresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
     volumes:
       - ./letsencrypt:/letsencrypt
     labels:
