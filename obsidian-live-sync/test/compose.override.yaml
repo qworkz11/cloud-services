@@ -1,0 +1,28 @@
+version: "3"
+
+networks:
+  traefik:
+    external: true
+
+volumes:
+  obsidian-couchdb-data:
+    name: obsidian-couchdb-data
+    driver: local
+  obsidian-couchdb-etc:
+    name: obsidian-couchdb-etc
+    driver: local
+
+services:
+  obsidian-couchdb:
+    container_name: obsidian-couchdb-test
+    networks:
+      - traefik
+    volumes:
+      - obsidian-couchdb-data:/opt/couchdb/data
+      - obsidian-couchdb-etc:/opt/couchdb/etc/local.d
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.obsidian-couchdb_route.rule=Host(`$OBSIDIAN_COUCHDB_HOST`) # OBSIDIAN_COUCHDB_HOST must be specified in .env file
+      - traefik.http.routers.obsidian-couchdb_route.service=obsidian-couchdb_service
+      - traefik.http.services.obsidian-couchdb_service.loadbalancer.server.port=5984
+      - traefik.http.routers.obsidian-couchdb_route.entrypoints=http
