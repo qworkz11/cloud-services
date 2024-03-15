@@ -1,0 +1,7 @@
+version: "3.8"
+
+services:
+  obsidian-couchdb:
+    image: couchdb:3.3.3
+    hostname: obsidian-couchdb
+    restart: unless-stopped
