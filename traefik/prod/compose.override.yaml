@@ -36,7 +36,8 @@ services:
       - DUCKDNS_TOKEN=$DUCKDNS_TOKEN
     labels:
       - traefik.enable=true
-      - traefik.http.routers.traefik-api.rule=Host(`$SUBDOMAIN_DASHBOARD.$DOMAIN`)
-      - traefik.http.routers.traefik-api.service=api@internal
-      - traefik.http.routers.traefik-api.middlewares=api-auth
+      - traefik.http.routers.traefik-dashboard.rule=Host(`$SUBDOMAIN_DASHBOARD.$DOMAIN`)
+      - traefik.http.routers.traefik-dashboard.service=dashboard-service
+      - traefik.http.services.dashboard-service.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik-dashboard.middlewares=api-auth
       - traefik.http.middlewares.api-auth.basicAuth.users=$DASHBOARD_USER:$DASHBOARD_USER_PASSWORD_HASH
