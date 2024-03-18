@@ -2,28 +2,34 @@ version: "3.8"
 
 services:
   traefik:
+    container_name: traefik
     ports:
       - 443:443
     command:
       - --log.level=$TRAEFIK_LOG_LEVEL
-      # - --api.insecure=true
+      # Note: This functions as a workaround to be able to use the Dashboard. Port 8080 should not be accessible from outside Traefik
+      - --api.insecure=true
       - --api.dashboard=true
+      - --api=true
       - --accesslog=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
+      # Entry points:
       - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --entrypoints.websecure.address=:443
       - --entrypoints.websecure.http.tls.domains[0].main=$DOMAIN
       - --entrypoints.websecure.http.tls.domains[0].sans=*.$DOMAIN
+      # Wildcard TLS certificate via Let's Encrypt:
       - --entrypoints.websecure.http.tls.certresolver=letsencrypt
       - --certificatesresolvers.letsencrypt.acme.dnschallenge=true
       - --certificatesresolvers.letsencrypt.acme.dnschallenge.provider=duckdns
+      - --certificatesresolvers.letsencrypt.acme.dnschallenge.delaybeforecheck=20
       - --certificatesresolvers.letsencrypt.acme.email=$EMAIL
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      # only for debugging:
-      - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      # Only for debugging:
+      # - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
     volumes:
       - ./letsencrypt:/letsencrypt
     environment:
