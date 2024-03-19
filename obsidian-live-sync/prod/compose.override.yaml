@@ -25,6 +25,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.obsidian-livesync.rule=Host(`$OBSIDIAN_LIVESYNC_DOMAIN`)
+      - traefik.http.routers.obsidian-livesync.entrypoints=websecure
       - traefik.http.routers.obsidian-livesync.service=obsidian-livesync
       - traefik.http.services.obsidian-livesync.loadbalancer.server.port=5984
       - traefik.http.routers.obsidian-livesync.middlewares=obsidiancors
