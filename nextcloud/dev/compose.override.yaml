@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  nextcloud:
+    container_name: nextcloud
+    hostname: nextcloud
+    ports:
+      - 8081:80
+      
+  nextcloud-db:
+    container_name: nextcloud-db
+    hostname: nextcloud-db
+      
