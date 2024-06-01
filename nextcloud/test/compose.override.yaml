@@ -1,0 +1,56 @@
+version: "3.8"
+
+networks:
+  traefik:
+    external: true
+
+volumes:
+  nextcloud-data:
+    name: nextcloud-data
+    driver: local
+  nextcloud-db-data:
+    name: nextcloud-db-data
+    driver: local
+
+services:
+  nextcloud:
+    container_name: nextcloud
+    hostname: nextcloud
+    networks:
+      - traefik
+    ports:
+      - 8081:80
+    volumes:
+      - nextcloud-data:/var/www/html
+    environment:
+      - NEXTCLOUD_TRUSTED_DOMAINS=nextcloud.localhost
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nextcloud.rule=Host(`nextcloud.localhost`)
+      - traefik.http.routers.nextcloud.service=nextcloud-service
+      - traefik.http.services.nextcloud-service.loadbalancer.server.port=80
+      - traefik.http.routers.nextcloud.entrypoints=web
+
+  nextcloud-cron:
+      image: nextcloud:29.0.0-apache
+      entrypoint: /cron.sh
+      networks:
+        - traefik
+      volumes:
+        - nextcloud-data:/var/www/html
+      depends_on:
+        - nextcloud-db
+        - nextcloud-cache
+        - nextcloud
+
+  nextcloud-db:
+    container_name: nextcloud-db
+    networks:
+      - traefik
+    volumes:
+      - nextcloud-db-data:/var/lib/mysql
+
+  nextcloud-cache:
+    networks:
+      - traefik
+      
