@@ -23,9 +23,11 @@ services:
     environment:
       - MYSQL_USER=$MYSQL_USER
       - MYSQL_PASSWORD=$MYSQL_PASSWORD
-      - NEXTCLOUD_ADMIN=$NEXTCLOUD_ADMIN
+      - NEXTCLOUD_ADMIN_USER=$NEXTCLOUD_ADMIN
       - NEXTCLOUD_ADMIN_PASSWORD=$NEXTCLOUD_ADMIN_PASSWORD
       - NEXTCLOUD_TRUSTED_DOMAINS=$NEXTCLOUD_HOST
+      - OVERWRITEHOST=$NEXTCLOUD_HOST
+      - OVERWRITEPROTOCOL=https
     labels:
       - traefik.enable=true
       - traefik.http.routers.nextcloud.rule=Host(`$NEXTCLOUD_HOST`)
@@ -34,7 +36,7 @@ services:
       - traefik.http.routers.nextcloud.entrypoints=websecure
 
   nextcloud-cron:
-      image: nextcloud:29.0.0-apache
+      image: nextcloud:29.0.1-apache
       entrypoint: /cron.sh
       networks:
         - traefik
