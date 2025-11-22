@@ -14,6 +14,7 @@ volumes:
 
 services:
   nextcloud:
+    image: $DOCKER_NEXTCLOUD_IMAGE
     container_name: nextcloud
     hostname: nextcloud
     networks:
@@ -36,20 +37,22 @@ services:
       - traefik.http.routers.nextcloud.entrypoints=websecure
 
   nextcloud-cron:
-      networks:
-        - traefik
-      volumes:
-        - nextcloud-data:/var/www/html
-      environment:
-        - MYSQL_USER=$MYSQL_USER
-        - MYSQL_PASSWORD=$MYSQL_PASSWORD
-        - NEXTCLOUD_ADMIN_USER=$NEXTCLOUD_ADMIN
-        - NEXTCLOUD_ADMIN_PASSWORD=$NEXTCLOUD_ADMIN_PASSWORD
-        - NEXTCLOUD_TRUSTED_DOMAINS=$NEXTCLOUD_HOST
-        - OVERWRITEHOST=$NEXTCLOUD_HOST
-        - OVERWRITEPROTOCOL=https
+    image: $DOCKER_NEXTCLOUD_IMAGE
+    networks:
+      - traefik
+    volumes:
+      - nextcloud-data:/var/www/html
+    environment:
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_PASSWORD=$MYSQL_PASSWORD
+      - NEXTCLOUD_ADMIN_USER=$NEXTCLOUD_ADMIN
+      - NEXTCLOUD_ADMIN_PASSWORD=$NEXTCLOUD_ADMIN_PASSWORD
+      - NEXTCLOUD_TRUSTED_DOMAINS=$NEXTCLOUD_HOST
+      - OVERWRITEHOST=$NEXTCLOUD_HOST
+      - OVERWRITEPROTOCOL=https
 
   nextcloud-db:
+    image: $DOCKER_MYSQL_IMAGE
     container_name: nextcloud-db
     networks:
       - traefik
@@ -61,6 +64,7 @@ services:
       - MYSQL_USER=$MYSQL_USER
 
   nextcloud-cache:
+    image: $DOCKER_REDIS_IMAGE
     networks:
       - traefik
       

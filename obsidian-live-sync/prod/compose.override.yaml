@@ -14,6 +14,7 @@ volumes:
 
 services:
   obsidian-couchdb:
+    image: $DOCKER_IMAGE
     networks:
       - traefik
     volumes:
