@@ -8,19 +8,25 @@ manage.py start all
 manage.py start traefik nextcloud
 """
 
-from pathlib import Path
 import argparse
+import logging
 import subprocess
 from dataclasses import dataclass
-import logging
-from typing import Literal
+from pathlib import Path
+from typing import Literal, Optional
 
 LOGGER = logging.getLogger()
 logging.basicConfig(level=logging.DEBUG)
 
 HELP_TEXT_LIST = "Either 'all' or a list of services"
+HELP_TEXT_EXCLUDE = "List of services to exclude"
 SUBPATH_PROD = "prod"
+FILE_NAME_OVERRIDE_YAML = "compose.override.yaml"
+FILE_POSTFIX_DOCKER_COMPOSE_YAML = "docker-compose.yaml"
+FILE_ENDING_YAML = ".yaml"
+
 CWD = Path(__file__).parent
+
 
 @dataclass
 class Service:
@@ -32,10 +38,12 @@ class Service:
             |-NAME.docker-compose.yaml
             |-compose.override.yaml
     """
+
     name: str
     dir: Path
     compose_file: Path
     override_file: Path
+
 
 def find_service_paths(dir: Path) -> list[Path]:
     """Searches for directories within dir that contain a 'prod' directory.
@@ -53,6 +61,7 @@ def find_service_paths(dir: Path) -> list[Path]:
 
     return paths
 
+
 def find_services(paths: list[Path]) -> tuple[dict[str, Service], list[Service]]:
     """Generates a set of services based on a list of valid service root directories.
 
@@ -68,18 +77,21 @@ def find_services(paths: list[Path]) -> tuple[dict[str, Service], list[Service]]
     for path in paths:
         service_name = str(path.relative_to(CWD))
         service = Service(
-            name = service_name,
+            name=service_name,
             dir=path,
-            compose_file=path.joinpath(SUBPATH_PROD).joinpath(f"{service_name}.docker-compose.yaml"),
-            override_file=path.joinpath(SUBPATH_PROD).joinpath("compose.override.yaml")
+            compose_file=path.joinpath(SUBPATH_PROD).joinpath(
+                f"{service_name}.{FILE_POSTFIX_DOCKER_COMPOSE_YAML}"
+            ),
+            override_file=path.joinpath(SUBPATH_PROD).joinpath(FILE_NAME_OVERRIDE_YAML),
         )
 
-        if len(validate_service(service)) >0:
+        if len(validate_service(service)) > 0:
             faulty.append(service)
         else:
             services[service_name] = service
 
     return services, faulty
+
 
 def validate_service(service: Service) -> list[Path]:
     """Validates a service. A service is valid if all directories and files exist.
@@ -94,13 +106,20 @@ def validate_service(service: Service) -> list[Path]:
     if not service.dir.is_dir():
         faulty_paths.append(service.dir)
 
-    if not service.compose_file.is_file() or not service.compose_file.suffix == ".yaml":
+    if (
+        not service.compose_file.is_file()
+        or not service.compose_file.suffix == FILE_ENDING_YAML
+    ):
         faulty_paths.append(service.compose_file)
 
-    if not service.override_file.is_file() or not service.override_file.suffix == ".yaml":
+    if (
+        not service.override_file.is_file()
+        or not service.override_file.suffix == FILE_ENDING_YAML
+    ):
         faulty_paths.append(service.override_file)
 
     return faulty_paths
+
 
 def docker_command_for(service: Service, command: Literal["up", "down"]) -> list[str]:
     """Create a list of commands that can be executed on the CLI for the docker compose command specified.
@@ -112,14 +131,28 @@ def docker_command_for(service: Service, command: Literal["up", "down"]) -> list
     Returns:
         List of commands that can be executed e.g. as a subprocess.
     """
-    _command = ["docker", "compose", "-f", str(service.compose_file), "-f", str(service.override_file), command]
+    _command = [
+        "docker",
+        "compose",
+        "-f",
+        str(service.compose_file),
+        "-f",
+        str(service.override_file),
+        command,
+    ]
 
     if command == "up":
         _command.append("-d")
 
     return _command
 
-def do_command(service_names: list[str], command: Literal["up", "down"]) -> None:
+
+def do_command(
+    service_names: list[str],
+    command: Literal["up", "down"],
+    exclude: Optional[list[str]] = None,
+    dry_run: bool = False,
+) -> None:
     """Execute a command for a set of service names (can be ['all'] or a list of services ['s1', 's2']).
 
     Args:
@@ -133,6 +166,12 @@ def do_command(service_names: list[str], command: Literal["up", "down"]) -> None
         LOGGER.warning(f"Faulty services found: {faulty}")
 
     service_names = services.keys() if "all" in service_names else service_names
+    LOGGER.debug(f"Received command '{command}' for {service_names}")
+
+    if exclude is not None:
+        service_names = list(filter(lambda x: x not in exclude, service_names))
+
+    LOGGER.debug(f"Excluding services: {exclude}")
     LOGGER.debug(f"Executing '{command}' for {service_names}")
 
     for name in service_names:
@@ -141,30 +180,42 @@ def do_command(service_names: list[str], command: Literal["up", "down"]) -> None
         else:
             service = services[name]
 
-            proc = subprocess.run(docker_command_for(service, command))
+            command_list = docker_command_for(service, command)
+            if dry_run:
+                LOGGER.info(f"[dry] {command_list}")
+                proc = subprocess.CompletedProcess(command_list, 0)
+            else:
+                proc = subprocess.run(docker_command_for(service, command))
 
             if proc.returncode != 0:
                 LOGGER.error(f"Failed to '{command}' service: '{service.name}'")
 
-def do_start(service_names: list[str]) -> None:
+
+def do_start(
+    service_names: list[str], exclude: Optional[list[str]] = None, dry_run: bool = False
+) -> None:
     """Run 'up' for a set of services.
 
     Args:
         service_names: Service names (either ['all'] or a set of names ['s1', 's2'])
     """
-    LOGGER.info(f"Starting services {service_names}")
-    do_command(service_names, "up")
+    LOGGER.info(f"Starting services {service_names}, exluding {exclude}")
+    do_command(service_names, "up", exclude, dry_run)
     LOGGER.info("Done.")
 
-def do_stop(service_names: list[str]):
+
+def do_stop(
+    service_names: list[str], exclude: Optional[list[str]] = None, dry_run: bool = False
+):
     """Run 'down -d' for a set of services.
 
     Args:
         service_names: Service names (either ['all'] or a set of names ['s1', 's2'])
     """
-    LOGGER.info(f"Stopping services {service_names}")
-    do_command(service_names, "down")
+    LOGGER.info(f"Stopping services {service_names}, exluding {exclude}")
+    do_command(service_names, "down", exclude, dry_run)
     LOGGER.info("Done.")
+
 
 def get_log_level(level_str: Literal["debug", "info", "error"]) -> int:
     """Map a string log level to a logging log level.
@@ -182,25 +233,35 @@ def get_log_level(level_str: Literal["debug", "info", "error"]) -> int:
             return logging.INFO
         case "error":
             return logging.ERROR
-        
+
     return logging.INFO
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="manager")
     parser.add_argument("--log", default="info", choices=["debug", "info", "error"])
-    
+    parser.add_argument(
+        "--dry",
+        help="Dry run (skip docker compose execution)",
+        action="store_true",
+        default=False,
+    )
+
     subparser = parser.add_subparsers()
 
     parser_stop = subparser.add_parser("stop")
     parser_stop.add_argument("LIST", nargs="+", help=HELP_TEXT_LIST)
+    parser_stop.add_argument("--exclude", nargs="*", help=HELP_TEXT_EXCLUDE)
     parser_stop.set_defaults(func=do_stop)
 
     parser_start = subparser.add_parser("start")
     parser_start.add_argument("LIST", nargs="+", help=HELP_TEXT_LIST)
+    parser_start.add_argument("--exclude", nargs="*", help=HELP_TEXT_EXCLUDE)
     parser_start.set_defaults(func=do_start)
 
     args = parser.parse_args()
 
     LOGGER.setLevel(get_log_level(args.log))
+    LOGGER.debug(f"CLI arguments: {args}")
 
-    args.func(args.LIST)
+    args.func(args.LIST, args.exclude, args.dry)
