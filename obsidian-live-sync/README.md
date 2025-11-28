@@ -16,6 +16,9 @@
    * Username: Get from docker-compose file
    * Password: Get from docker-compose file
 
+### Prod
+Same as above, remember to use proper domain incl. protocol (`https://DOMAIN`).
+
 
 ### Setup `Self-hosted LiveSync` Plugin in Obsidian
 
