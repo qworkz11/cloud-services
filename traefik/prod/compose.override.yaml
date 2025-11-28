@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   traefik:
+    image: $DOCKER_IMAGE
     container_name: traefik
     ports:
       - 443:443
