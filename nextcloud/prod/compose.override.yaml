@@ -67,4 +67,23 @@ services:
     image: $DOCKER_REDIS_IMAGE
     networks:
       - traefik
+
+  nextcloud-collabora:
+    container_name: nextcloud-collabora
+    image: $DOCKER_COLLABORA_IMAGE
+    restart: unless-stopped
+    networks:
+      - traefik
+    environment:
+      - domain=$NEXTCLOUD_HOST
+      - aliasgroup1=$COLLABORA_ALIAS_GROUP_1
+      - dictionaries=en_GB en_US de_DE
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true # SSH enabled through traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nextcloud-collabora.rule=Host(`$COLLABORA_HOST`)
+      - traefik.http.routers.nextcloud-collbara.service=nextcloud-collabora-service
+      - traefik.http.services.nextcloud-collabora-service.loadbalancer.server.port=9980
+      - traefik.http.routers.nextcloud-collabora.entrypoints=websecure
+    
       
