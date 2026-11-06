@@ -58,7 +58,7 @@ service-root
 
 ```yaml
 # e.g. service-root/test/service-name.docker-compose.yaml
-version: "3"
+
 
 include:
     - ../dev/service-name.docker-compose.yaml
